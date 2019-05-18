@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { TextInput, Platform, StyleSheet, Text, View, TouchableHighlight, Keyboard, PermissionsAndroid,
-ToachableOpacity } from 'react-native';
+TouchableOpacity, ActivityIndicator } from 'react-native';
 import MapView, { PROVIDER_GOOGLE, Marker, Polyline } from 'react-native-maps';
 import {apiKey} from '../apiKey';
 import _ from 'lodash';
@@ -16,7 +16,8 @@ export default class Passenger extends Component {
       longitude: 0,
       destination: "",
       predictions: [],
-      pointCoords: []
+      pointCoords: [],
+      lookingForPassengers: false,
     };
     this.onChangeDestinationDebounced = _.debounce(
       this.onChangeDestination,
@@ -29,7 +30,10 @@ export default class Passenger extends Component {
   }
 
   async requestDriver(){
-    const socket = sockeIO.connect("http://localhost:3000/")
+    const socket = sockeIO.connect("http://192.168.43.92:3000")
+    this.setState({
+      lookingForPassengers: true,
+    })
     socket.on('connect', ()=>{
       console.log('client connected')
       //Request a taxi
@@ -59,7 +63,7 @@ export default class Passenger extends Component {
                 longitude: position.coords.longitude
               });
             },
-            error => console.error(error),
+            error => alert("App couldn't get device location. Please ensure your device is connected to internet and gprs enabled."),
             { enableHighAccuracy: true, timeout: 60000 }
           );
       } else {
@@ -130,6 +134,11 @@ export default class Passenger extends Component {
         <TouchableOpacity onPress={()=> this.requestDriver()} style={styles.bottomButton}>
           <View>
             <Text style={styles.bottomButtonText}>FIND A DRIVER</Text>
+            {this.state.lookingForPassengers === true ? ( 
+              <ActivityIndicator 
+                animating={this.state.lookingForPassengers} 
+              size='large' />
+            ) : null }
           </View>
         </TouchableOpacity>
       )

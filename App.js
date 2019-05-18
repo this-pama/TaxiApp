@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Button, StyleSheet, Text, View} from 'react-native';
+import { Button, StyleSheet, Text, View,  } from 'react-native';
 import Passenger from './screens/Passenger'
 import Driver from './screens/Driver'
 
@@ -14,11 +14,11 @@ export default class App extends Component {
 
 
   render() {
-    if(tsThisType.state.isPassenger){
+    if(this.state.isPassenger){
       return <Passenger />
     }
     
-    if(this.state,isDriver){
+    if(this.state.isDriver){
       return <Driver />
     }
     return (
