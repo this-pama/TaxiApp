@@ -1,199 +1,38 @@
 import React, { Component } from 'react';
-import { TextInput, Platform, StyleSheet, Text, View, TouchableHighlight, Keyboard, PermissionsAndroid } from 'react-native';
-import MapView, { PROVIDER_GOOGLE, Marker, Polyline } from 'react-native-maps';
-import {apiKey} from './apiKey'
-import _ from 'lodash'
-import PolyLine from '@mapbox/polyline'
+import { Button, StyleSheet, Text, View} from 'react-native';
+import Passenger from './screens/Passenger'
+import Driver from './screens/Driver'
 
 export default class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      error: "",
-      latitude: 0,
-      longitude: 0,
-      destination: "",
-      predictions: [],
-      pointCoords: []
+      isDriver: false,
+      isPassenger: false
     };
-    this.onChangeDestinationDebounced = _.debounce(
-      this.onChangeDestination,
-      1000
-    );
   }
 
-  componentDidMount() {
-    this.permissionForLocation()
-  }
-
-  async permissionForLocation(){
-    try {
-      const granted = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-        {
-          title: 'Taxi App Location Request',
-          message:
-            'Taxi App require your permission to access your location details ',
-          buttonNeutral: 'Ask Me Later',
-          buttonNegative: 'Cancel',
-          buttonPositive: 'OK',
-        },
-      );
-      if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-        //Get current location and set initial region to this
-          navigator.geolocation.getCurrentPosition(
-            position => {
-              this.setState({
-                latitude: position.coords.latitude,
-                longitude: position.coords.longitude
-              });
-            },
-            error => console.error(error),
-            { enableHighAccuracy: true, timeout: 60000 }
-          );
-      } else {
-        alert('Taxi App might not work because of the denied permission.')
-      }
-    } catch (err) {
-      console.warn(err);
-    }
-  }
-
-  async getRouteDirections(destinationPlaceId, destinationName) {
-    try {
-      const response = await fetch(
-        `https://maps.googleapis.com/maps/api/directions/json?origin=${
-          this.state.latitude
-        },${
-          this.state.longitude
-        }&destination=place_id:${destinationPlaceId}&key=${apiKey}`
-      );
-      const json = await response.json();
-      console.log(json);
-      const points = PolyLine.decode(json.routes[0].overview_polyline.points);
-      const pointCoords = points.map(point => {
-        return { latitude: point[0], longitude: point[1] };
-      });
-      this.setState({
-        pointCoords,
-        predictions: [],
-        destination: destinationName
-      });
-      Keyboard.dismiss();
-      this.map.fitToCoordinates(pointCoords);
-    } catch (error) {
-      console.error(error);
-    }
-  }
-
-  async onChangeDestination(destination) {
-    const apiUrl = `https://maps.googleapis.com/maps/api/place/autocomplete/json?key=${apiKey}
-    &input=${destination}&location=${this.state.latitude},${
-      this.state.longitude
-    }&radius=2000`;
-    console.log(apiUrl);
-    try {
-      const result = await fetch(apiUrl);
-      const json = await result.json();
-      this.setState({
-        predictions: json.predictions
-      });
-      console.log(json);
-    } catch (err) {
-      console.error(err);
-    }
-  }
 
   render() {
-    let marker = null;
-
-    if (this.state.pointCoords.length > 1) {
-      marker = (
-        <Marker
-          coordinate={this.state.pointCoords[this.state.pointCoords.length - 1]}
-        />
-      );
+    if(tsThisType.state.isPassenger){
+      return <Passenger />
     }
-
-    const predictions = this.state.predictions.map(prediction => (
-      <TouchableHighlight
-        onPress={() =>
-          this.getRouteDirections(
-            prediction.place_id,
-            prediction.structured_formatting.main_text
-          )
-        }
-        key={prediction.id}
-      >
-        <View>
-          <Text style={styles.suggestions}>
-            {prediction.structured_formatting.main_text}
-          </Text>
-        </View>
-      </TouchableHighlight>
-    ));
-
+    
+    if(this.state,isDriver){
+      return <Driver />
+    }
     return (
-      <View style={styles.container}>
-        <MapView
-          ref={map => {
-            this.map = map;
-          }}
-          style={styles.map}
-          region={{
-            latitude: this.state.latitude,
-            longitude: this.state.longitude,
-            latitudeDelta: 0.015,
-            longitudeDelta: 0.0121
-          }}
-          showsUserLocation={true}
-        >
-          <Polyline
-            coordinates={this.state.pointCoords}
-            strokeWidth={4}
-            strokeColor="red"
-          />
-          {marker}
-        </MapView>
-        <TextInput
-          placeholder="Enter destination..."
-          style={styles.destinationInput}
-          value={this.state.destination}
-          clearButtonMode="always"
-          onChangeText={destination => {
-            console.log(destination);
-            this.setState({ destination });
-            this.onChangeDestinationDebounced(destination);
-          }}
-        />
-        {predictions}
+      <View style={ styles.container}>
+          <Button onPress={()=> this.setState({isPassenger : true})} title="Passenger" />
+          <Button onPress={()=> this.setState({isDriver : true})} title= "Driver" />
       </View>
     );
   }
 }
 
 const styles = StyleSheet.create({
-  suggestions: {
-    backgroundColor: "white",
-    padding: 5,
-    fontSize: 18,
-    borderWidth: 0.5,
-    marginLeft: 5,
-    marginRight: 5
-  },
-  destinationInput: {
-    height: 40,
-    borderWidth: 0.5,
+ container:{
+    flex: 1,
     marginTop: 50,
-    marginLeft: 5,
-    marginRight: 5,
-    padding: 5,
-    backgroundColor: "white"
-  },
-  container: {
-    ...StyleSheet.absoluteFillObject
-  },
-  map: {
-    ...StyleSheet.absoluteFillObject
-  }
+ },
 });

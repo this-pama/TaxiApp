@@ -11,7 +11,8 @@
     "react": "16.6.3",
     "react-native": "0.58.6",
     "react-native-maps": "^0.24.2",
-    "react-native-unimodules": "0.3.1"
+    "react-native-unimodules": "0.3.1",
+    "socket.io-client": "^2.2.0"
   },
   "devDependencies": {
     "babel-jest": "24.1.0",
